@@ -97,5 +97,19 @@ python src/verify_db.py
 *   **Telemetry:** Logs execution metrics to the database for debugging.
 *   **Localization:** Default UI and Content in Traditional Chinese (zh-TW).
 
+## 📦 Release & Deployment
+This project uses **GitHub Actions** to automatically build a standalone Windows executable.
+
+### How to Build
+1.  **Push a Tag:** The workflow is triggered when you push a tag starting with `v` (e.g., `v1.0.0`).
+    ```bash
+    git tag v1.0.0
+    git push origin v1.0.0
+    ```
+2.  **Download:** Go to the **Releases** page on GitHub. You will find a `JadeScribe-Windows.zip` file attached to the release.
+3.  **Run:** Extract the zip and run `JadeScribe.exe`.
+
+> **Note:** The executable contains the application logic but **still requires Ollama** to be installed and running on the user's machine.
+
 ## 📄 License
 MIT License. See [LICENSE](LICENSE) for details.
