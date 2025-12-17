@@ -179,3 +179,10 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# JadeScribe specific ignores
+data/*.db
+images/*
+!images/.gitkeep
+resources/jade-archive.zip
+resources/jadevault.zip

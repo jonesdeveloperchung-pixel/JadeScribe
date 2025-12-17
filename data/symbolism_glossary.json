@@ -1,0 +1,72 @@
+{
+  "motifs": {
+    "guanyin": {
+      "name": "觀音 (Guanyin)",
+      "meaning": "大慈大悲，救苦救難。手持淨瓶楊柳，象徵拂去煩惱，灑下甘露。",
+      "keywords": ["菩薩", "慈悲", "蓮花", "淨瓶"]
+    },
+    "bamboo": {
+      "name": "竹 (Bamboo)",
+      "meaning": "節節高升，虛懷若谷。竹報平安，象徵君子氣節與事業順遂。",
+      "keywords": ["植物", "竹節", "高升", "氣節"]
+    },
+    "laughing_buddha": {
+      "name": "彌勒佛 (Laughing Buddha)",
+      "meaning": "笑口常開，大肚能容。象徵量大福大，招財納福，解憂消愁。",
+      "keywords": ["微笑", "大肚", "福氣", "和尚"]
+    },
+    "ruyi": {
+      "name": "如意 (Ruyi)",
+      "meaning": "萬事如意，順心遂意。古代象徵權力與吉祥的法器。",
+      "keywords": ["靈芝雲紋", "權力", "吉祥", "順心"]
+    },
+    "dragon": {
+      "name": "龍 (Dragon)",
+      "meaning": "真龍天子，權勢尊貴。象徵騰雲駕霧，呼風喚雨，護佑平安。",
+      "keywords": ["神獸", "鱗片", "權力", "帝王"]
+    },
+    "phoenix": {
+      "name": "鳳凰 (Phoenix)",
+      "meaning": "百鳥之王，涅槃重生。象徵祥瑞之氣，常與龍配對，寓意龍鳳呈祥。",
+      "keywords": ["神鳥", "羽毛", "優雅", "重生"]
+    },
+    "lotus": {
+      "name": "蓮花 (Lotus)",
+      "meaning": "出淤泥而不染，聖潔清淨。象徵修行圓滿，心靈純淨。",
+      "keywords": ["花", "蓮蓬", "純潔", "佛教"]
+    },
+    "pixiu": {
+      "name": "貔貅 (Pixiu)",
+      "meaning": "招財進寶，只進不出。瑞獸貔貅，鎮宅化煞，守護財庫。",
+      "keywords": ["瑞獸", "財富", "古錢", "翅膀"]
+    },
+    "coin": {
+      "name": "古錢 (Ancient Coin)",
+      "meaning": "財源廣進，外圓內方。象徵天地合一，富貴圓滿。",
+      "keywords": ["圓形", "方孔", "財富", "金錢"]
+    },
+    "peach": {
+      "name": "壽桃 (Peach)",
+      "meaning": "福壽雙全，健康長壽。象徵蟠桃獻壽，家中長輩安康。",
+      "keywords": ["水果", "長壽", "祝壽", "葉子"]
+    },
+    "gourd": {
+      "name": "葫蘆 (Gourd)",
+      "meaning": "福祿雙全，子孫萬代。葫蘆諧音「福祿」，且多籽，象徵多子多福。",
+      "keywords": ["植物", "福祿", "多子", "曲線"]
+    },
+    "bean_pod": {
+      "name": "福豆 (Bean Pod)",
+      "meaning": "四季平安，多子多福。飽滿的豆莢象徵收穫與成果。",
+      "keywords": ["豆莢", "圓潤", "豐收", "平安"]
+    }
+  },
+  "colors": {
+    "imperial_green": "帝王綠 (Imperial Green) - 色澤濃鬱純正，翠綠欲滴，為翡翠中的極品。",
+    "apple_green": "陽綠 (Apple Green) - 色調明亮鮮豔，如初春新葉，充滿生機。",
+    "moss_green": "油青 (Moss Green) - 色澤沈穩深邃，如森林苔蘚，質感油潤。",
+    "lavender": "紫羅蘭 (Lavender) - 色澤優雅浪漫，寓意紫氣東來，高貴神秘。",
+    "ice_jade": "冰種/玻璃種 (Ice Jade) - 質地清澈透明，光澤如冰似水，晶瑩剔透。",
+    "white": "白底青 (White with Green) - 底色潔白細膩，飄有綠色，對比鮮明。"
+  }
+}
