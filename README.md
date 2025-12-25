@@ -4,6 +4,8 @@
 
 **JadeScribe** 是一個專為高端翡翠珠寶設計的 AI 智能編目助手。它利用本地運行的人工智慧模型，自動分析影像、識別商品編號，並生成具有文化底蘊的行銷文案。
 
+![JadeScribe 主畫面](screenshots/main.png)
+
 ## ✨ 主要功能
 
 *   **👁️ 智慧影像分析 (Multi-Item Vision)**
@@ -80,11 +82,18 @@ streamlit run src/app.py
 *   **預覽 (Web Preview)**：勾選商品可查看模擬網頁效果。
 *   **匯出 (Export)**：點擊「📥 下載完整報表」取得 CSV 檔。
 
+![編目列表](screenshots/catalog.png)
+
 ### 4. 系統重置 (Reset)
 若需清空所有測試資料，可至左側邊欄的 **「⚠️ 危險區域」** 執行「重置資料庫」，或在終端機執行：
 ```bash
 python reset.py
 ```
+
+### 5. 系統日誌 (Logs)
+切換至「⚙️ 系統日誌」分頁，可查看後台運行的詳細記錄，包含 API 回應狀態與錯誤訊息。
+
+![系統日誌](screenshots/Log.png)
 
 ---
 

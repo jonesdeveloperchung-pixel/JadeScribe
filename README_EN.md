@@ -4,6 +4,8 @@
 
 **JadeScribe** is an AI-powered cataloging assistant designed for high-end jade jewelry. Running entirely locally, it analyzes images, extracts item codes, and generates culturally rich marketing copy in Traditional Chinese.
 
+![JadeScribe Main Interface](screenshots/main.png)
+
 ## ✨ Key Features
 
 *   **👁️ Multi-Item Vision Analysis**
@@ -80,11 +82,18 @@ Switch to the **"📝 Catalog"** tab:
 *   **Web Preview**: Check the box next to an item to see a mock product page.
 *   **Export**: Click **"📥 Export CSV"** to download your data.
 
+![Catalog View](screenshots/catalog.png)
+
 ### 4. Reset
 To wipe all data (e.g., for a fresh demo), go to the sidebar **"⚠️ Danger Zone"** and click **"Reset Database"**, or run:
 ```bash
 python reset.py
 ```
+
+### 5. System Logs
+Switch to the **"⚙️ System Logs"** tab to view detailed backend logs, including API response status and error messages.
+
+![System Logs](screenshots/Log.png)
 
 ---
 
