@@ -111,7 +111,7 @@ with tab1:
     
     if uploaded_file:
         # Display Image
-        st.image(uploaded_file, caption="預覽 (Preview)", use_container_width=True)
+        st.image(uploaded_file, caption="預覽 (Preview)")
         
         # Save temp file for Ollama
         temp_dir = "images"
@@ -123,6 +123,11 @@ with tab1:
         # Action Buttons
         col1, col2 = st.columns(2)
         with col1:
+            # User Hints Input
+            user_tags = st.text_input("💡 輔助標籤 (Optional Hints)", 
+                                    placeholder="例如：觀音, 滿綠, 冰種 (e.g., Guanyin, Imperial Green)",
+                                    help="輸入關鍵字可幫助 AI 更準確識別圖案與特徵 (Keywords help AI identify motifs accurately)")
+            
             # Only enable button if system is healthy
             analyze_btn = st.button(
                 "🔍 開始辨識 (Start Analysis)", 
@@ -134,7 +139,7 @@ with tab1:
         if analyze_btn:
             with st.spinner("⏳ 正在分析影像與提取物件... (Scanning Image...)"):
                 # 1. Vision Analysis (Returns a List)
-                items_found = analyze_image_content(temp_path, enable_ocr=enable_ocr)
+                items_found = analyze_image_content(temp_path, enable_ocr=enable_ocr, user_hints=user_tags)
                 
                 # Check for global errors (single error dict in list)
                 if len(items_found) == 1 and "error" in items_found[0]:
@@ -155,7 +160,7 @@ with tab1:
                             with c1:
                                 # Show Enhanced Crop if available (The "Gemologist View")
                                 if crop_path and os.path.exists(crop_path):
-                                    st.image(crop_path, caption="🔍 增強細節 (Enhanced Detail)", use_container_width=True)
+                                    st.image(crop_path, caption="🔍 增強細節 (Enhanced Detail)")
                                 else:
                                     st.caption("無局部特寫 (No Crop Available)")
                                 
