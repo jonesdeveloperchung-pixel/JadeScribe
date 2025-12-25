@@ -1,34 +1,51 @@
-# 🟢 JadeScribe
+# 🟢 JadeScribe (翠藝錄)
 
-## 📋 Overview
-**JadeScribe** is an AI-powered tool designed to automate the cataloging of high-end jade pendants. It processes images to:
-1.  **Identify** items and extract their codes (e.g., `PA-0425_AF`).
-2.  **Analyze** visual features (Color, Motif, Texture).
-3.  **Generate** elegant, culturally informed descriptions in Traditional Chinese (繁體中文).
-4.  **Catalog** all data into a local SQLite database.
+[English](README_EN.md) | [繁體中文](README.md)
 
-## 🏗️ Architecture
-*   **Frontend:** [Streamlit](https://streamlit.io/) (Web UI).
-*   **AI Engine:** [Ollama](https://ollama.com/) (Local).
-    *   **Vision:** `llava:latest` (Image Analysis & OCR).
-    *   **Text:** `gemma3n:e4b` (Creative Writing).
-*   **Database:** SQLite (`data/jade_inventory.db`).
-*   **Knowledge Base:** `data/symbolism_glossary.json` (Cultural symbolism).
+**JadeScribe** 是一個專為高端翡翠珠寶設計的 AI 智能編目助手。它利用本地運行的人工智慧模型，自動分析影像、識別商品編號，並生成具有文化底蘊的行銷文案。
 
-## 🚀 Quick Start
+## ✨ 主要功能
 
-### Prerequisites
-*   Python 3.10+
-*   [Ollama](https://ollama.com/) installed and running.
-*   Required Models:
+*   **👁️ 智慧影像分析 (Multi-Item Vision)**
+    *   **批量識別**：能一次掃描整盤翡翠，自動偵測多個吊墜及其對應的商品編號（OCR）。
+    *   **特徵提取**：自動分析顏色（如帝王綠、紫羅蘭）、種水（冰種、糯種）及圖案（觀音、福豆）。
+
+*   **✍️ 三重風格文案生成 (Marketing Suite)**
+    *   **📜 經典敘事 (Hero)**：優雅、詩意，融入文化寓意（如「竹報平安」），適合品牌故事或畫冊。
+    *   **🛍️ 現代電商 (Modern)**：直觀、條列式，強調材質與佩戴亮點，適合官網詳情頁。
+    *   **📱 社群快訊 (Social)**：短小精悍，帶有 Emoji 與熱門標籤，適合 Instagram 或小紅書推廣。
+
+*   **🏪 商品編目與匯出**
+    *   **Web Preview**：內建模擬商品頁面，即時預覽文案在電商網站上的效果。
+    *   **CSV 匯出**：一鍵下載完整資料庫，輕鬆匯入 Shopify、WooCommerce 或 ERP 系統。
+
+*   **🛡️ 企業級穩定性**
+    *   **資料庫自癒**：遇到損壞自動備份並重建，確保系統不中斷。
+    *   **AI 容錯**：具備網路重試機制與智慧 JSON 解析，提升生成成功率。
+
+---
+
+## 🚀 快速開始
+
+### 前置需求
+*   **Python 3.10+**
+*   **[Ollama](https://ollama.com/)** (需安裝並在背景執行)
+*   **必備 AI 模型**：
+    請在終端機執行以下指令下載模型：
     ```bash
-    ollama pull llama3.2-vision:latest
-    ollama pull gemma3n:e4b
+    ollama pull llama3.2-vision:latest  # 視覺模型
+    ollama pull gemma3n:e4b             # 文字模型
     ```
 
-### Installation
-1.  **Clone/Open the repository.**
-2.  **Set up Virtual Environment:**
+### 安裝步驟
+
+1.  **下載專案**
+    ```bash
+    git clone https://github.com/yourusername/JadeScribe.git
+    cd JadeScribe
+    ```
+
+2.  **建立虛擬環境 (推薦)**
     ```bash
     python -m venv .venv
     # Windows
@@ -36,80 +53,48 @@
     # macOS/Linux
     source .venv/bin/activate
     ```
-3.  **Navigate to Project Folder:**
-    ```bash
-    cd JadeScribe
-    ```
-4.  **Install Dependencies:**
+
+3.  **安裝依賴套件**
     ```bash
     pip install -r requirements.txt
     ```
 
-### Configuration
-The system uses **Environment Variables** for configuration. 
-You can create a `.env` file or set them in your shell.
-
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `OLLAMA_HOST` | URL of the Ollama API | `http://localhost:11434` |
-| `VISION_MODEL` | Model for Image Analysis | `llama3.2-vision:latest` |
-| `TEXT_MODEL` | Model for Description Generation | `gemma3n:e4b` |
-
-**Example (Windows PowerShell):**
-```powershell
-$env:OLLAMA_HOST="http://192.168.1.100:11434"
-streamlit run src/app.py
-```
-
-### Running the Application
+### 啟動應用程式
 ```bash
 streamlit run src/app.py
 ```
-Access the UI at: `http://localhost:8501`
+啟動後，瀏覽器將自動開啟：`http://localhost:8501`
 
-## 📂 Project Structure
-```
-JadeScribe/
-├── data/
-│   ├── jade_inventory.db      # SQLite Database (Local only)
-│   ├── schema.sql             # Database Schema
-│   └── symbolism_glossary.json # Cultural Knowledge Base
-├── docs/                      # Design & Requirement Specs
-├── images/                    # Image Analysis Buffer
-├── src/
-│   ├── ai_engine.py           # Ollama Integration (Vision/Text)
-│   ├── app.py                 # Streamlit UI Entry Point
-│   ├── db_manager.py          # Database CRUD Operations
-│   └── utils.py               # Helper Utilities
-├── tests/                     # Automated Tests
-└── requirements.txt           # Python Dependencies
-```
+---
 
-## 🧪 Testing
-Run the verification script to check database integrity:
+## 📖 使用指南
+
+### 1. 影像上傳 (Upload)
+在「📸 影像上傳」分頁，拖曳或選擇您的翡翠照片。系統會自動偵測連線狀態。點擊 **「🔍 開始辨識」**，AI 將掃描所有物件。
+
+### 2. 文案審閱 (Review)
+辨識完成後，系統會列出所有偵測到的商品。您可以展開每個項目，切換查看 **經典、現代、社群** 三種風格的文案。
+
+### 3. 編目管理 (Catalog)
+切換至「📝 編目列表」分頁：
+*   **預覽 (Web Preview)**：勾選商品可查看模擬網頁效果。
+*   **匯出 (Export)**：點擊「📥 下載完整報表」取得 CSV 檔。
+
+### 4. 系統重置 (Reset)
+若需清空所有測試資料，可至左側邊欄的 **「⚠️ 危險區域」** 執行「重置資料庫」，或在終端機執行：
 ```bash
-python src/verify_db.py
+python reset.py
 ```
 
-## 📝 Features
-*   **Image Analysis:** Automatically detects item codes and visual traits.
-*   **Symbolism Integration:** Weaves cultural meanings (e.g., Guanyin, Bamboo) into descriptions.
-*   **Telemetry:** Logs execution metrics to the database for debugging.
-*   **Localization:** Default UI and Content in Traditional Chinese (zh-TW).
+---
 
-## 📦 Release & Deployment
-This project uses **GitHub Actions** to automatically build a standalone Windows executable.
+## 🏗️ 技術架構
+*   **Frontend**: Streamlit (Python Web UI)
+*   **AI Backend**: Ollama (Local LLM)
+    *   Vision: `llama3.2-vision`
+    *   Text: `gemma3n:e4b` (Localized for Traditional Chinese)
+*   **Database**: SQLite (Local file-based, Auto-healing)
+*   **Knowledge**: `data/symbolism_glossary.json` (文化象徵資料庫)
 
-### How to Build
-1.  **Push a Tag:** The workflow is triggered when you push a tag starting with `v` (e.g., `v1.0.0`).
-    ```bash
-    git tag v1.0.0
-    git push origin v1.0.0
-    ```
-2.  **Download:** Go to the **Releases** page on GitHub. You will find a `JadeScribe-Windows.zip` file attached to the release.
-3.  **Run:** Extract the zip and run `JadeScribe.exe`.
-
-> **Note:** The executable contains the application logic but **still requires Ollama** to be installed and running on the user's machine.
-
-## 📄 License
-MIT License. See [LICENSE](LICENSE) for details.
+## 📄 授權條款
+MIT License. 詳見 [LICENSE](LICENSE) 文件。

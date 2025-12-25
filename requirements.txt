@@ -2,3 +2,6 @@ streamlit
 requests
 Pillow
 ollama
+opencv-python-headless
+easyocr
+numpy

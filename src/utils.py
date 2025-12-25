@@ -81,6 +81,38 @@ def check_ollama_status(base_url: Optional[str] = None) -> Dict[str, Any]:
             "error_details": str(e)
         }
 
+def get_ollama_models(base_url: Optional[str] = None) -> list:
+    """
+    Retrieves a list of available model names from Ollama.
+    """
+    if base_url is None:
+        base_url = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    
+    try:
+        response = requests.get(f"{base_url}/api/tags", timeout=5.0)
+        if response.status_code == 200:
+            data = response.json()
+            models = data.get("models", [])
+            # Return list of model names (e.g., 'llama3.2-vision:latest')
+            return [m.get("name") for m in models]
+    except Exception as e:
+        logger.error(f"Failed to fetch models: {e}")
+    return []
+
+def check_model_availability(model_name: str, base_url: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Checks if a specific model is available in the local Ollama instance.
+    """
+    available_models = get_ollama_models(base_url)
+    
+    # Exact match check
+    is_available = model_name in available_models
+    
+    return {
+        "available": is_available,
+        "message": f"✅ 模型 '{model_name}' 已就緒" if is_available else f"⚠️ 未找到模型 '{model_name}'"
+    }
+
 def is_chinese(text: str) -> bool:
     """
     Check if the text contains Chinese characters.

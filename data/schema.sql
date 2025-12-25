@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS items (
     item_code TEXT PRIMARY KEY,
     title TEXT,
     description_hero TEXT,
+    description_modern TEXT, -- E-commerce style description
+    description_social TEXT, -- Social media style description
     attributes_json TEXT, -- Stores JSON object of features (Color, Motif, etc.)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
