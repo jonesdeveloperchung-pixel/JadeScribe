@@ -75,6 +75,11 @@ def check_and_migrate_db():
             logger.info("Migrating DB: Adding 'description_social' column.")
             cursor.execute("ALTER TABLE items ADD COLUMN description_social TEXT")
             
+        # Add 'rarity_rank' if missing (New in v1.2)
+        if 'rarity_rank' not in columns:
+            logger.info("Migrating DB: Adding 'rarity_rank' column.")
+            cursor.execute("ALTER TABLE items ADD COLUMN rarity_rank TEXT DEFAULT 'B'")
+            
         conn.commit()
     except sqlite3.Error as e:
         logger.error(f"Database migration failed: {e}")
@@ -135,7 +140,7 @@ def save_item(item_data: Dict[str, Any]):
     
     Args:
         item_data: Dictionary containing 'item_code', 'title', 'description_hero', 
-                   'description_modern', 'description_social', 'attributes'.
+                   'description_modern', 'description_social', 'attributes', 'rarity_rank'.
     """
     conn = get_db_connection()
     if not conn:
@@ -147,15 +152,16 @@ def save_item(item_data: Dict[str, Any]):
         query = """
             INSERT INTO items (
                 item_code, title, description_hero, description_modern, description_social, 
-                attributes_json, updated_at
+                attributes_json, rarity_rank, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             ON CONFLICT(item_code) DO UPDATE SET
                 title=excluded.title,
                 description_hero=excluded.description_hero,
                 description_modern=excluded.description_modern,
                 description_social=excluded.description_social,
                 attributes_json=excluded.attributes_json,
+                rarity_rank=excluded.rarity_rank,
                 updated_at=CURRENT_TIMESTAMP
         """
         
@@ -165,7 +171,8 @@ def save_item(item_data: Dict[str, Any]):
             item_data.get("description_hero", ""),
             item_data.get("description_modern", ""),
             item_data.get("description_social", ""),
-            json.dumps(item_data.get("attributes", {}))
+            json.dumps(item_data.get("attributes", {})),
+            item_data.get("rarity_rank", "B")
         )
         
         cursor.execute(query, values)
@@ -210,7 +217,7 @@ def export_items_to_csv() -> str:
     output = io.StringIO()
     # Define headers
     headers = [
-        "item_code", "title", 
+        "item_code", "title", "rarity_rank",
         "description_hero", "description_modern", "description_social",
         "attributes_json", "updated_at"
     ]

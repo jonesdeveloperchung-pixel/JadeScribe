@@ -42,11 +42,11 @@ echo.
 REM 3. Launch Application
 echo [3/3] Launching JadeScribe...
 echo.
-echo    Target Ollama Host: http://192.168.16.90:11434
+echo    Target Ollama Host: http://192.168.16.120:11434
 echo    (Close this window to stop the application)
 echo.
 
-set OLLAMA_HOST=http://192.168.16.90:11434
+set OLLAMA_HOST=http://192.168.16.120:11434
 
 streamlit run src/app.py
 

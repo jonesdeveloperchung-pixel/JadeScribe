@@ -7,14 +7,19 @@ from PIL import Image
 from utils import check_ollama_status, get_default_model_config
 from ai_engine import analyze_image_content, generate_marketing_copy
 from db_manager import save_item, get_all_items, check_and_migrate_db, export_items_to_csv
+from grading_utils import JadeGrader
+from pdf_generator import generate_pdf_catalog
+from manual_generator import generate_user_manual
 
 # Configure Logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Initialization ---
-# Migrate DB on startup to ensure new columns exist
+# Migrate DB on startup
 check_and_migrate_db()
+# Initialize Grader
+grader = JadeGrader()
 
 # --- UI Configuration (Traditional Chinese Default) ---
 st.set_page_config(
@@ -72,13 +77,27 @@ with st.sidebar:
             st.rerun()
 
     st.markdown("---")
-    st.header("設定 (Settings)")
-    st.info("目前配置 (Current Config):")
-    st.code(json.dumps(get_default_model_config(), indent=2), language="json")
+    # Manual Download
+    try:
+        manual_pdf = generate_user_manual()
+        st.download_button(
+            label="📘 下載使用手冊 (User Manual)",
+            data=manual_pdf,
+            file_name="JadeScribe_User_Manual.pdf",
+            mime="application/pdf"
+        )
+    except Exception as e:
+        logger.error(f"Manual generation failed: {e}")
 
+    st.markdown("---")
+    st.header("設定 (Settings)")
     # Performance Settings
     st.markdown("#### 效能設定 (Performance)")
-    enable_ocr = st.toggle("🚀 啟用增強 OCR (Enable Enhanced OCR)", value=True, help="關閉此選項可加快舊電腦的處理速度 (Disable for faster performance on old PCs)")
+    enable_ocr = st.toggle(
+        "🚀 啟用增強 OCR (Enable Enhanced OCR)", 
+        value=True, 
+        help="【建議開啟】能精準讀取標籤上的編號。\n若您的電腦速度較慢，關閉此選項可大幅加速，但編號可能需要手動修正。"
+    )
     if not enable_ocr:
         st.caption("⚠️ 快速模式：將跳過文字識別，僅進行影像分析。")
     
@@ -106,7 +125,15 @@ tab1, tab2, tab3 = st.tabs(["📸 影像上傳 (Upload)", "📝 編目列表 (Ca
 
 with tab1:
     st.header("1. 上傳翡翠影像")
-    st.caption("支援多物件識別 (Supports multi-item detection)")
+    
+    # User Guide Block
+    with st.expander("ℹ️ 使用說明 (How to use)", expanded=False):
+        st.markdown("""
+        1. **上傳照片**：點擊下方按鈕或拖曳照片至上傳區。
+        2. **輸入提示**（選填）：若照片較模糊，可輸入關鍵字（如「觀音」）幫助 AI。
+        3. **開始辨識**：點擊按鈕，AI 將自動分析並生成文案。
+        """)
+
     uploaded_file = st.file_uploader("請選擇影像檔案 (Supported: JPG, PNG)", type=["jpg", "jpeg", "png"])
     
     if uploaded_file:
@@ -125,19 +152,19 @@ with tab1:
         with col1:
             # User Hints Input
             user_tags = st.text_input("💡 輔助標籤 (Optional Hints)", 
-                                    placeholder="例如：觀音, 滿綠, 冰種 (e.g., Guanyin, Imperial Green)",
-                                    help="輸入關鍵字可幫助 AI 更準確識別圖案與特徵 (Keywords help AI identify motifs accurately)")
+                                    placeholder="例如：觀音, 滿綠, 冰種",
+                                    help="在此輸入關鍵字，可讓 AI 更準確地識別圖案與特徵。")
             
             # Only enable button if system is healthy
             analyze_btn = st.button(
                 "🔍 開始辨識 (Start Analysis)", 
                 type="primary", 
                 disabled=not system_healthy,
-                help="請先解決左側邊欄的系統問題 (Please resolve system issues in sidebar)" if not system_healthy else "開始分析影像"
+                help="點擊後，系統將自動掃描圖片中的所有物件。"
             )
         
         if analyze_btn:
-            with st.spinner("⏳ 正在分析影像與提取物件... (Scanning Image...)"):
+            with st.spinner("⏳ 正在分析影像與提取物件... (這可能需要幾秒鐘)"):
                 # 1. Vision Analysis (Returns a List)
                 items_found = analyze_image_content(temp_path, enable_ocr=enable_ocr, user_hints=user_tags)
                 
@@ -155,6 +182,10 @@ with tab1:
                         features = item.get("visual_features", {})
                         crop_path = item.get("crop_path", None)
                         
+                        # Calculate Grade
+                        rank = grader.calculate_grade(features)
+                        rank_info = grader.get_tier_info(rank)
+                        
                         with st.expander(f"💎 物件 #{idx+1}: {item_code}", expanded=True):
                             c1, c2 = st.columns([1, 2])
                             with c1:
@@ -165,6 +196,8 @@ with tab1:
                                     st.caption("無局部特寫 (No Crop Available)")
                                 
                                 st.metric("識別編號", item_code, delta="OCR Verified" if crop_path else "AI Vision")
+                                # Show Grade Badge
+                                st.markdown(f"**參考評級:** :{rank_info['color']}[{rank}級 - {rank_info['name']}]")
                                 st.json(features)
                             
                             with c2:
@@ -189,40 +222,93 @@ with tab1:
                                             "description_hero": copy_deck["hero"],
                                             "description_modern": copy_deck["modern"],
                                             "description_social": copy_deck["social"],
-                                            "attributes": features
+                                            "attributes": features,
+                                            "rarity_rank": rank
                                         })
-                                        st.toast(f"已儲存: {item_code}", icon="💾")
+                                        st.toast(f"已儲存: {item_code} (Grade {rank})", icon="💾")
 
 with tab2:
     st.header("已編目翡翠 (Cataloged Items)")
     
-    col_tools_1, col_tools_2 = st.columns([1, 3])
-    with col_tools_1:
+    with st.expander("ℹ️ 使用說明 (How to filter)", expanded=False):
+        st.info("您可以使用下方的工具來篩選庫存。支援依「關鍵字」搜尋（如編號）或依「等級」篩選。")
+
+    # --- Toolbar (Search & Filter) ---
+    st.markdown("##### 🔍 搜尋與篩選 (Search & Filter)")
+    f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
+    with f_col1:
+        search_query = st.text_input("關鍵字搜尋 (Search by code or title)", placeholder="PA-0425, Guanyin...")
+    with f_col2:
+        filter_grade = st.selectbox("等級篩選 (Grade)", ["All", "S", "A", "B"])
+    with f_col3:
         if st.button("🔄 重新整理 (Refresh)"):
             st.rerun()
-    with col_tools_2:
-        # CSV Export
-        csv_data = export_items_to_csv()
-        st.download_button(
-            label="📥 下載完整報表 (Export CSV)",
-            data=csv_data,
-            file_name="jade_inventory_export.csv",
-            mime="text/csv"
-        )
-        
-    items = get_all_items()
+            
+    # --- Data Loading & Filtering ---
+    all_items = get_all_items()
+    filtered_items = []
     
-    if not items:
-        st.info("目前資料庫中沒有項目 (No items in database).")
+    for item in all_items:
+        # 1. Filter by Grade
+        rank = item.get('rarity_rank', 'B')
+        if filter_grade != "All" and rank != filter_grade:
+            continue
+            
+        # 2. Filter by Search Query
+        q = search_query.lower()
+        if q:
+            text_corpus = (str(item['item_code']) + str(item['title']) + str(item['description_hero'])).lower()
+            if q not in text_corpus:
+                continue
+        
+        filtered_items.append(item)
+    
+    st.caption(f"顯示 {len(filtered_items)} / {len(all_items)} 筆資料")
+
+    # --- Export Tools ---
+    with st.expander("📤 匯出工具 (Export Tools)"):
+        ec1, ec2 = st.columns(2)
+        with ec1:
+            # CSV Export
+            csv_data = export_items_to_csv()
+            st.download_button(
+                label="📥 下載 CSV 報表",
+                data=csv_data,
+                file_name="jade_inventory_export.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        with ec2:
+            # PDF Export
+            if st.button("📄 生成 PDF 目錄 (Generate Catalog)", use_container_width=True):
+                try:
+                    pdf_bytes = generate_pdf_catalog(filtered_items)
+                    st.download_button(
+                        label="📥 下載 PDF 目錄",
+                        data=pdf_bytes,
+                        file_name="jade_catalog.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"PDF Generation Failed: {e}")
+
+    # --- Item List ---
+    if not filtered_items:
+        st.info("沒有符合條件的項目 (No items found).")
     else:
-        for item in items:
-            with st.expander(f"{item['item_code']} - {item['title']}"):
+        for item in filtered_items:
+            rank = item.get('rarity_rank', 'B')
+            rank_info = grader.get_tier_info(rank)
+            
+            with st.expander(f"[{rank}級] {item['item_code']} - {item['title']}"):
                 
                 # Preview Toggle
                 if st.checkbox(f"👁️ 預覽商品頁面 (Web Preview)", key=f"prev_{item['item_code']}"):
                     st.markdown("---")
                     st.markdown(f"### 🟢 {item['title']}")
                     st.caption(f"Ref: {item['item_code']}")
+                    st.markdown(f"**等級評鑑:** :{rank_info['color']}[{rank}級 - {rank_info['name']}]")
                     
                     # Simulate Web Layout
                     wc1, wc2 = st.columns([1, 1])

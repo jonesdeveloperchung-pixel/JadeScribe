@@ -5,3 +5,4 @@ ollama
 opencv-python-headless
 easyocr
 numpy
+reportlab

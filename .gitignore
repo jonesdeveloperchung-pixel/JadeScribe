@@ -186,3 +186,4 @@ images/*
 !images/.gitkeep
 resources/jade-archive.zip
 resources/jadevault.zip
+*.pdf

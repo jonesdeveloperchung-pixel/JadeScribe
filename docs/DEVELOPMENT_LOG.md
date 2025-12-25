@@ -29,7 +29,7 @@
 *   **Virtual Environment**: Configured Python virtual environment at `C:\Users\jones\Downloads\JADE_RECOG\.venv312`. All Python operations will now be executed within this environment.
 
 ## [2025-12-17] Configuration Updates
-*   **Ollama Settings Modified**: User manually updated `VISION_MODEL` to `llava:latest`, `TEXT_MODEL` to `gemma3n:e4b`, and `OLLAMA_HOST` to `http://192.168.16.90:11434` in `src/ai_engine.py` (and presumably `src/utils.py`). These settings will be used for all future Ollama interactions.
+*   **Ollama Settings Modified**: User manually updated `VISION_MODEL` to `llava:latest`, `TEXT_MODEL` to `gemma3n:e4b`, and `OLLAMA_HOST` to `http://192.168.16.120:11434` in `src/ai_engine.py` (and presumably `src/utils.py`). These settings will be used for all future Ollama interactions.
 
 ## [2025-12-17] Feature Completion & Testing
 *   **Symbolism Integration**: Updated `src/ai_engine.py` to load `symbolism_glossary.json` and inject cultural context into description prompts.
@@ -39,7 +39,7 @@
 
 ## [2025-12-17] Project Finalization
 *   **UI Fixes**: Resolved Streamlit deprecation warnings and `TypeError` by updating `src/app.py` to use `use_container_width=True`.
-*   **Configuration Sync**: Updated `src/utils.py` to match the user's specific Ollama host (`192.168.16.90`) and model selection (`llava`/`gemma3n`).
+*   **Configuration Sync**: Updated `src/utils.py` to match the user's specific Ollama host (`192.168.16.120`) and model selection (`llava`/`gemma3n`).
 *   **Documentation Alignment**: Updated `Requirement_Specification.md` and `Design_Specification.md` to accurately reflect the final technology stack and model choices.
 *   **Status**: Project Complete.
 

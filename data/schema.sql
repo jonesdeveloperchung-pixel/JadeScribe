@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS items (
     description_modern TEXT, -- E-commerce style description
     description_social TEXT, -- Social media style description
     attributes_json TEXT, -- Stores JSON object of features (Color, Motif, etc.)
+    rarity_rank TEXT DEFAULT 'B', -- Rarity Tier (S, A, B)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

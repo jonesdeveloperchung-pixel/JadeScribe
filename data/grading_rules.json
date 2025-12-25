@@ -1,0 +1,33 @@
+{
+    "tiers": {
+        "S": {
+            "name": "收藏級 (Collection Grade)",
+            "description": "極其稀有，具備頂級種水與色澤。",
+            "color": "#FFD700" 
+        },
+        "A": {
+            "name": "高貨級 (High Grade)",
+            "description": "質地細膩，色澤鮮明，具備極高配戴價值。",
+            "color": "#C0C0C0"
+        },
+        "B": {
+            "name": "商業級 (Commercial Grade)",
+            "description": "入門首選，性價比高，適合日常配戴。",
+            "color": "#CD7F32"
+        }
+    },
+    "rules": [
+        {
+            "tier": "S",
+            "required_keywords": ["帝王綠", "玻璃種", "Imperial Green", "Glassy", "Transparent"]
+        },
+        {
+            "tier": "A",
+            "required_keywords": ["冰種", "陽綠", "紫羅蘭", "Icy", "Apple Green", "Lavender"]
+        },
+        {
+            "tier": "B",
+            "required_keywords": [] 
+        }
+    ]
+}

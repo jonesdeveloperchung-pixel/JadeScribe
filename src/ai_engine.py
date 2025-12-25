@@ -59,22 +59,35 @@ def _get_symbolism_context(motif: str, color: str) -> str:
 def clean_json_output(text: str) -> str:
     """
     Extracts the JSON-like substring from the text, removing Markdown code blocks.
+    Attempt to be robust against common LLM formatting errors.
     """
+    if not text:
+        return ""
+
     # 1. Remove markdown code blocks ```json ... ``` or ``` ... ```
     text = re.sub(r'```json\s*', '', text, flags=re.IGNORECASE)
     text = re.sub(r'```\s*', '', text)
     
-    # 2. Find first [ or { and last ] or } to handle extra text around JSON
-    # Try finding an Array
-    list_match = re.search(r'\[.*\]', text, re.DOTALL)
-    if list_match:
-        return list_match.group(0)
+    # 2. Find the first '{' and the last '}' to isolate the JSON object
+    # This handles cases where the LLM adds intro/outro text like "Here is the JSON:"
+    start = text.find('{')
+    end = text.rfind('}')
     
-    # Try finding an Object
-    obj_match = re.search(r'\{.*\}', text, re.DOTALL)
-    if obj_match:
-        return obj_match.group(0)
-        
+    if start != -1 and end != -1 and end > start:
+        text = text[start:end+1]
+    
+    # 3. Find list [...] if object not found or we expect a list
+    # (Though current prompts mostly ask for Objects, the vision fallback asks for List)
+    if start == -1:
+        start_list = text.find('[')
+        end_list = text.rfind(']')
+        if start_list != -1 and end_list != -1 and end_list > start_list:
+            text = text[start_list:end_list+1]
+
+    # 4. Cleanup Control Characters that might break json.loads
+    # Remove standard control characters but keep newlines for now
+    text = "".join(ch for ch in text if ch == '\n' or ch == '\r' or ch == '\t' or ord(ch) >= 32)
+    
     return text.strip()
 
 def safe_chat_call(model, messages, options=None, format=None, retries=2):
@@ -100,14 +113,17 @@ def safe_chat_call(model, messages, options=None, format=None, retries=2):
             
     raise last_error
 
-def analyze_single_crop(image_path: str, ocr_code: str = "Unknown") -> Dict[str, Any]:
+def analyze_single_crop(image_path: str, ocr_code: str = "Unknown", user_hints: str = "") -> Dict[str, Any]:
     """
     Analyzes a single cropped image with "Gemologist" Chain-of-Thought prompting.
     """
+    hint_text = f'User Hints/Context: "{user_hints}"' if user_hints else "User Hints: None"
+
     prompt = f"""
     You are a professional Gemologist analyzing a high-resolution close-up of a Jade Pendant.
     
     Detected Item Code from Label: "{ocr_code}" (If "Unknown", try to read it from the image).
+    {hint_text} (Use this context to assist identification if the image is unclear).
 
     Perform a "Zoom-In" Analysis:
     1. Transparency: Is it Opaque, Translucent (Waxy/Sticky), or Transparent (Icy/Glassy)?
@@ -158,7 +174,7 @@ def analyze_single_crop(image_path: str, ocr_code: str = "Unknown") -> Dict[str,
             }
         }
 
-def analyze_image_content(image_path: str, enable_ocr: bool = True) -> List[Dict[str, Any]]:
+def analyze_image_content(image_path: str, enable_ocr: bool = True, user_hints: str = "") -> List[Dict[str, Any]]:
     """
     Analyzes an image using a Hybrid Pipeline:
     1. Computer Vision Segmentation (Crops) + EasyOCR (Optional)
@@ -171,7 +187,7 @@ def analyze_image_content(image_path: str, enable_ocr: bool = True) -> List[Dict
     if not status["running"]:
         return [{"error": f"Ollama service is not running or accessible at {OLLAMA_HOST}."}]
 
-    logger.info(f"Analyzing image: {image_path} (OCR Enabled: {enable_ocr})")
+    logger.info(f"Analyzing image: {image_path} (OCR: {enable_ocr}, Hints: {user_hints})")
     
     # 2. Attempt Segmentation & Crop
     try:
@@ -190,7 +206,7 @@ def analyze_image_content(image_path: str, enable_ocr: bool = True) -> List[Dict
             ocr_code = item["ocr_code"]
             
             # Analyze
-            crop_result = analyze_single_crop(crop_path, ocr_code)
+            crop_result = analyze_single_crop(crop_path, ocr_code, user_hints=user_hints)
             
             # Add file path to result so UI can display the crop
             crop_result["crop_path"] = crop_path 
@@ -199,8 +215,11 @@ def analyze_image_content(image_path: str, enable_ocr: bool = True) -> List[Dict
     else:
         # 4. Fallback: Full Image Analysis (Old Method)
         logger.warning("No items segmented. Falling back to full image analysis.")
-        prompt = """
-        Analyze this image of jade pendants. Return a JSON ARRAY of items found.
+        hint_text = f'User Context/Tags: "{user_hints}"' if user_hints else ""
+        
+        prompt = f"""
+        Analyze this image of jade pendants. {hint_text}
+        Return a JSON ARRAY of items found.
         Extract Item Code and Visual Features (Color, Motif, Texture).
         """
         try:
