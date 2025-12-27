@@ -1,0 +1,48 @@
+[
+  {
+    "model": "moondream:latest",
+    "image": "images/IMG_6070.jpeg",
+    "duration_s": 30.43,
+    "response_length": 381,
+    "success": true,
+    "output": "\nThe image shows a display case containing various jade pendants. The pendants are arranged in rows and columns on the display tray, with each row having a different motif carved into them. The colors..."
+  },
+  {
+    "model": "llama3.2-vision:latest",
+    "image": "images/IMG_6070.jpeg",
+    "success": false,
+    "error": "timed out"
+  },
+  {
+    "model": "llava:latest",
+    "image": "images/IMG_6070.jpeg",
+    "duration_s": 146.35,
+    "response_length": 2389,
+    "success": true,
+    "output": " ```json\n{\n  \"items\": [\n    {\n      \"item_code\": \"PA-01_AF\",\n      \"motif\": \"Leaf\",\n      \"color\": \"Green with natural variations in color and texture\",\n      \"texture\": \"Smooth, translucent, with som..."
+  },
+  {
+    "model": "moondream:latest",
+    "image": "images/processed/crop_1766657282_0.jpg",
+    "duration_s": 31.04,
+    "response_length": 320,
+    "success": true,
+    "output": "\nThe image shows a collection of jade pendants. The pendant is carved in the shape of a fish and has a green color with white spots on it. It is placed on a wooden base that also holds another small, ..."
+  },
+  {
+    "model": "llama3.2-vision:latest",
+    "image": "images/processed/crop_1766657282_0.jpg",
+    "duration_s": 195.75,
+    "response_length": 387,
+    "success": true,
+    "output": "The image shows a jade pendant with a carved figure of a dragon. The item code is not visible, but the motif is a dragon. The color of the jade is green, and the texture appears to be smooth and polis..."
+  },
+  {
+    "model": "llava:latest",
+    "image": "images/processed/crop_1766657282_0.jpg",
+    "duration_s": 56.32,
+    "response_length": 210,
+    "success": true,
+    "output": " ```json\n{\n  \"items\": [\n    {\n      \"item_code\": \"PA-XXXX_AF\",\n      \"motif\": \"Dragon\",\n      \"color\": \"Green with some brown and black accents\",\n      \"texture\": \"Smooth, with a glossy finish\"\n    }\n..."
+  }
+]

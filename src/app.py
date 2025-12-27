@@ -134,98 +134,92 @@ with tab1:
         3. **開始辨識**：點擊按鈕，AI 將自動分析並生成文案。
         """)
 
-    uploaded_file = st.file_uploader("請選擇影像檔案 (Supported: JPG, PNG)", type=["jpg", "jpeg", "png"])
+    uploaded_files = st.file_uploader("請選擇影像檔案 (可多選)", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
     
-    if uploaded_file:
-        # Display Image
-        st.image(uploaded_file, caption="預覽 (Preview)")
-        
-        # Save temp file for Ollama
-        temp_dir = "images"
-        os.makedirs(temp_dir, exist_ok=True)
-        temp_path = os.path.join(temp_dir, uploaded_file.name)
-        with open(temp_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+    if uploaded_files:
+        st.info(f"📁 已選取 {len(uploaded_files)} 個檔案。您可以在此視窗批次處理，或開啟新分頁同時處理其他檔案。")
         
         # Action Buttons
         col1, col2 = st.columns(2)
         with col1:
-            # User Hints Input
-            user_tags = st.text_input("💡 輔助標籤 (Optional Hints)", 
-                                    placeholder="例如：觀音, 滿綠, 冰種",
-                                    help="在此輸入關鍵字，可讓 AI 更準確地識別圖案與特徵。")
+            user_tags = st.text_input("💡 輔助標籤 (選填，將套用於本次上傳的所有圖片)", 
+                                    placeholder="例如：觀音, 冰種",
+                                    help="輸入關鍵字可提高 AI 辨識準確度。")
             
-            # Only enable button if system is healthy
             analyze_btn = st.button(
-                "🔍 開始辨識 (Start Analysis)", 
+                "🔍 開始處理所有檔案", 
                 type="primary", 
-                disabled=not system_healthy,
-                help="點擊後，系統將自動掃描圖片中的所有物件。"
+                disabled=not system_healthy
             )
         
         if analyze_btn:
-            with st.spinner("⏳ 正在分析影像與提取物件... (這可能需要幾秒鐘)"):
-                # 1. Vision Analysis (Returns a List)
-                items_found = analyze_image_content(temp_path, enable_ocr=enable_ocr, user_hints=user_tags)
+            for file_idx, uploaded_file in enumerate(uploaded_files):
+                # Unique filename per session/file to prevent multi-window collision
+                unique_prefix = f"{int(time.time())}_{file_idx}"
+                temp_dir = "images"
+                os.makedirs(temp_dir, exist_ok=True)
+                temp_filename = f"{unique_prefix}_{uploaded_file.name}"
+                temp_path = os.path.join(temp_dir, temp_filename)
                 
-                # Check for global errors (single error dict in list)
-                if len(items_found) == 1 and "error" in items_found[0]:
-                     st.error(f"Analysis Failed: {items_found[0]['error']}")
-                elif not items_found:
-                    st.warning("⚠️ 未檢測到任何翡翠物件 (No items detected).")
-                else:
-                    st.success(f"✅ 成功識別 {len(items_found)} 個物件 (Found {len(items_found)} items)!")
+                with open(temp_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                st.markdown(f"---")
+                st.subheader(f"🖼️ 正在處理 ({file_idx+1}/{len(uploaded_files)}): {uploaded_file.name}")
+                
+                with st.spinner(f"⏳ 正在分析 {uploaded_file.name}..."):
+                    # 1. Vision Analysis
+                    items_found = analyze_image_content(temp_path, enable_ocr=enable_ocr, user_hints=user_tags)
                     
-                    # Iterate through each detected item
-                    for idx, item in enumerate(items_found):
-                        item_code = item.get("item_code", f"Unknown-{idx}")
-                        features = item.get("visual_features", {})
-                        crop_path = item.get("crop_path", None)
+                    if len(items_found) == 1 and "error" in items_found[0]:
+                         st.error(f"[{uploaded_file.name}] Analysis Failed: {items_found[0]['error']}")
+                    elif not items_found:
+                        st.warning(f"⚠️ [{uploaded_file.name}] 未檢測到任何翡翠物件。")
+                    else:
+                        st.success(f"✅ [{uploaded_file.name}] 成功識別 {len(items_found)} 個物件!")
                         
-                        # Calculate Grade
-                        rank = grader.calculate_grade(features)
-                        rank_info = grader.get_tier_info(rank)
-                        
-                        with st.expander(f"💎 物件 #{idx+1}: {item_code}", expanded=True):
-                            c1, c2 = st.columns([1, 2])
-                            with c1:
-                                # Show Enhanced Crop if available (The "Gemologist View")
-                                if crop_path and os.path.exists(crop_path):
-                                    st.image(crop_path, caption="🔍 增強細節 (Enhanced Detail)")
-                                else:
-                                    st.caption("無局部特寫 (No Crop Available)")
-                                
-                                st.metric("識別編號", item_code, delta="OCR Verified" if crop_path else "AI Vision")
-                                # Show Grade Badge
-                                st.markdown(f"**參考評級:** :{rank_info['color']}[{rank}級 - {rank_info['name']}]")
-                                st.json(features)
+                        # Iterate through each detected item
+                        for idx, item in enumerate(items_found):
+                            item_code = item.get("item_code", f"Unknown-{file_idx}-{idx}")
+                            features = item.get("visual_features", {})
+                            crop_path = item.get("crop_path", None)
                             
-                            with c2:
-                                with st.spinner(f"✍️ 正在為 {item_code} 生成文案..."):
-                                    # 2. Generate Marketing Copy (3 Styles)
-                                    copy_deck = generate_marketing_copy(item)
+                            rank = grader.calculate_grade(features)
+                            rank_info = grader.get_tier_info(rank)
+                            
+                            with st.expander(f"💎 物件 #{idx+1} ({uploaded_file.name}): {item_code}", expanded=True):
+                                c1, c2 = st.columns([1, 2])
+                                with c1:
+                                    if crop_path and os.path.exists(crop_path):
+                                        st.image(crop_path, caption="🔍 增強細節")
+                                    else:
+                                        st.caption("無局部特寫")
                                     
-                                    # Display Tabs for Styles
-                                    t_hero, t_modern, t_social = st.tabs(["📜 經典 (Classical)", "🛍️ 現代 (Modern)", "📱 社群 (Social)"])
-                                    with t_hero:
-                                        st.write(copy_deck["hero"])
-                                    with t_modern:
-                                        st.write(copy_deck["modern"])
-                                    with t_social:
-                                        st.write(copy_deck["social"])
-                                    
-                                    # 3. Save to DB automatically
-                                    if item_code and item_code != "Unknown":
-                                        save_item({
-                                            "item_code": item_code,
-                                            "title": f"Jade Pendant - {features.get('motif', 'Unknown')}",
-                                            "description_hero": copy_deck["hero"],
-                                            "description_modern": copy_deck["modern"],
-                                            "description_social": copy_deck["social"],
-                                            "attributes": features,
-                                            "rarity_rank": rank
-                                        })
-                                        st.toast(f"已儲存: {item_code} (Grade {rank})", icon="💾")
+                                    st.metric("識別編號", item_code)
+                                    st.markdown(f"**參考評級:** :{rank_info['color']}[{rank}級 - {rank_info['name']}]")
+                                    st.json(features)
+                                
+                                with c2:
+                                    with st.spinner(f"✍️ 正在生成文案..."):
+                                        copy_deck = generate_marketing_copy(item)
+                                        t_hero, t_modern, t_social = st.tabs(["📜 經典", "🛍️ 現代", "📱 社群"])
+                                        with t_hero: st.write(copy_deck["hero"])
+                                        with t_modern: st.write(copy_deck["modern"])
+                                        with t_social: st.write(copy_deck["social"])
+                                        
+                                        if item_code and "Unknown" not in item_code:
+                                            save_item({
+                                                "item_code": item_code,
+                                                "title": f"Jade Pendant - {features.get('motif', 'Unknown')}",
+                                                "description_hero": copy_deck["hero"],
+                                                "description_modern": copy_deck["modern"],
+                                                "description_social": copy_deck["social"],
+                                                "attributes": features,
+                                                "rarity_rank": rank
+                                            })
+                                            st.toast(f"已儲存: {item_code}", icon="💾")
+    else:
+        st.info("💡 請先上傳照片以開始編目流程。")
 
 with tab2:
     st.header("已編目翡翠 (Cataloged Items)")

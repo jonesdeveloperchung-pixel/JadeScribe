@@ -8,9 +8,15 @@
 
 ## ✨ Key Features
 
-*   **👁️ Multi-Item Vision Analysis**
+*   **👁️ Advanced Vision Analysis**
+    *   **High Performance**: Supports **`moondream:latest`** for lightning-fast analysis (~30s per item) with minimal resource footprint.
+    *   **Remote AI Engine**: Connect to high-performance remote Ollama servers to offload heavy computation.
     *   **Batch Scanning**: Scans entire trays of jewelry, detecting multiple pendants and their Item Codes (OCR) simultaneously.
-    *   **Feature Extraction**: Identifies Color (e.g., Imperial Green), Texture (Icy, Glassy), and Motif (Guanyin, Bamboo).
+
+*   **📤 Batch & Multi-window Processing**
+    *   **Multi-file Upload**: Select and process multiple images at once.
+    *   **Multi-window Support**: Open multiple browser tabs to process different files independently and simultaneously.
+    *   **Real-time Progress**: Detailed progress tracking for each step of the batch analysis.
 
 *   **✍️ 3-Style Marketing Suite**
     *   **📜 Hero (Classical)**: Poetic and elegant, weaving in cultural symbolism (e.g., "Bamboo symbolizes resilience"). Ideal for brand catalogs.
@@ -35,8 +41,9 @@
 *   **Required Models**:
     Run the following in your terminal:
     ```bash
-    ollama pull llama3.2-vision:latest
-    ollama pull gemma3n:e4b
+    ollama pull moondream:latest        # Lightweight Vision (Recommended)
+    ollama pull llava:latest            # High Precision Vision (Optional)
+    ollama pull gemma3n:e4b             # Text Generation
     ```
 
 ### Installation

@@ -13,9 +13,9 @@ from vision_utils import ImageProcessor
 logger = logging.getLogger(__name__)
 
 # Constants
-VISION_MODEL = os.getenv("VISION_MODEL", "llama3.2-vision:latest")
+VISION_MODEL = os.getenv("VISION_MODEL", "moondream:latest")
 TEXT_MODEL = os.getenv("TEXT_MODEL", "gemma3n:e4b")
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://192.168.16.120:11434")
 
 # Initialize Client explicitly to avoid localhost resolution issues
 client = ollama.Client(host=OLLAMA_HOST)
@@ -115,34 +115,38 @@ def safe_chat_call(model, messages, options=None, format=None, retries=2):
 
 def analyze_single_crop(image_path: str, ocr_code: str = "Unknown", user_hints: str = "") -> Dict[str, Any]:
     """
-    Analyzes a single cropped image with "Gemologist" Chain-of-Thought prompting.
+    Analyzes a single cropped image. 
+    Adjusts prompt based on whether it's moondream or a more capable model.
     """
     hint_text = f'User Hints/Context: "{user_hints}"' if user_hints else "User Hints: None"
-
-    prompt = f"""
-    You are a professional Gemologist analyzing a high-resolution close-up of a Jade Pendant.
     
-    Detected Item Code from Label: "{ocr_code}" (If "Unknown", try to read it from the image).
-    {hint_text} (Use this context to assist identification if the image is unclear).
+    is_moondream = "moondream" in VISION_MODEL.lower()
 
-    Perform a "Zoom-In" Analysis:
-    1. Transparency: Is it Opaque, Translucent (Waxy/Sticky), or Transparent (Icy/Glassy)?
-    2. Texture: Describe the grain. Fine, coarse, or oily?
-    3. Color: Describe the primary color and any floating flowers (piao hua).
-    4. Motif: Identify the carved figure (e.g., Buddha, Leaf, Dragon).
-    
-    Return a JSON Object:
-    {{
-        "item_code": "{ocr_code if ocr_code != "Unknown" else "READ_FROM_IMAGE"}",
-        "visual_features": {{
-            "color": "...",
-            "motif": "...",
-            "characteristics": "Combine transparency and texture here..."
+    if is_moondream:
+        # Moondream works much better with very short, direct questions.
+        # We will use three tiny, separate queries if needed, or one extremely simple one.
+        prompt = "Describe this jade pendant: 1. What is the carved figure/motif? 2. What is the primary color? 3. Is there an item code like PA-XXXX visible?"
+    else:
+        # For more capable models like LLaVA or Llama-Vision
+        prompt = f"""
+        You are a professional Gemologist. Analyze this Jade Pendant.
+        1. Identification: Carved figure/motif (e.g. Buddha, Dragon, Leaf).
+        2. Color: Primary jade color and translucency.
+        3. Item Code: Find the code like 'PA-0425_AF' on the label.
+
+        Return JSON:
+        {{
+            "item_code": "{ocr_code}",
+            "visual_features": {{
+                "color": "...",
+                "motif": "...",
+                "characteristics": "..."
+            }}
         }}
-    }}
-    """
+        """
     
     try:
+        # Use JSON format only for non-moondream models
         response = safe_chat_call(
             model=VISION_MODEL,
             messages=[{
@@ -150,17 +154,64 @@ def analyze_single_crop(image_path: str, ocr_code: str = "Unknown", user_hints: 
                 'content': prompt,
                 'images': [image_path]
             }],
-            format='json',
+            format='json' if not is_moondream else None,
             options={'temperature': 0.1}
         )
         
         content = response['message']['content']
-        cleaned = clean_json_output(content)
-        result = json.loads(cleaned)
         
-        # Merge EasyOCR code if Vision model failed to read it or returned placeholder
-        if ocr_code != "Unknown":
-            result["item_code"] = ocr_code
+        if is_moondream:
+            # Enhanced Heuristic Parsing for Moondream's natural language output
+            content_lower = content.lower()
+            
+            # 1. Extract Motif (More robust check)
+            motif = "Unknown"
+            motif_keywords = {
+                "Buddha": ["buddha", "彌勒", "佛"],
+                "Guanyin": ["guanyin", "觀音"],
+                "Leaf": ["leaf", "葉子", "一葉致富"],
+                "Dragon": ["dragon", "龍"],
+                "Ruyi": ["ruyi", "如意"],
+                "Cabbage": ["cabbage", "白菜"],
+                "Fish": ["fish", "魚"],
+                "Gourd": ["gourd", "葫蘆"],
+                "Peanut": ["peanut", "花生"],
+                "Bamboo": ["bamboo", "竹"],
+                "Peach": ["peach", "桃"]
+            }
+            for label, keys in motif_keywords.items():
+                if any(k in content_lower for k in keys):
+                    motif = label
+                    break
+            
+            # 2. Extract Color
+            color = "Extracted"
+            color_keywords = ["green", "white", "lavender", "purple", "yellow", "red", "black", "icy", "透明", "綠", "白", "紫"]
+            found_colors = [c for c in color_keywords if c in content_lower]
+            if found_colors:
+                color = found_colors[0].capitalize()
+
+            # 3. Extract Item Code from AI response if EasyOCR failed
+            final_code = ocr_code
+            if ocr_code == "Unknown":
+                code_match = re.search(r'([A-Z]{2}-\d{4}(?:_[A-Z]{2})?)', content.upper())
+                if code_match:
+                    final_code = code_match.group(1)
+
+            result = {
+                "item_code": final_code,
+                "visual_features": {
+                    "color": color,
+                    "motif": motif,
+                    "characteristics": content.strip()
+                }
+            }
+        else:
+            cleaned = clean_json_output(content)
+            result = json.loads(cleaned)
+            # Merge EasyOCR code if Vision model failed to read it or returned placeholder
+            if ocr_code != "Unknown":
+                result["item_code"] = ocr_code
             
         return result
     except Exception as e:
@@ -170,7 +221,7 @@ def analyze_single_crop(image_path: str, ocr_code: str = "Unknown", user_hints: 
             "visual_features": {
                 "color": "Analysis Failed", 
                 "motif": "Unknown", 
-                "characteristics": "Error"
+                "characteristics": "Error during analysis"
             }
         }
 

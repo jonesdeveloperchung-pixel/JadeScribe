@@ -127,8 +127,8 @@ def get_default_model_config() -> Dict[str, str]:
     Returns the project's safe default model configuration.
     """
     return {
-        "vision_model": os.getenv("VISION_MODEL", "llama3.2-vision:latest"),
+        "vision_model": os.getenv("VISION_MODEL", "moondream:latest"),
         "text_model": os.getenv("TEXT_MODEL", "gemma3n:e4b"), 
         "embedding_model": "nomic-embed-text:latest",
-        "base_url": os.getenv("OLLAMA_HOST", "http://localhost:11434")
+        "base_url": os.getenv("OLLAMA_HOST", "http://192.168.16.120:11434")
     }
